@@ -2,6 +2,7 @@
 
 - [命令列表](#命令列表)
 - [无限跳板](#无限跳板)
+- [代理连接](#代理连接)
 - [远程执行](#远程执行)
 - [批量复制](#批量复制)
 - [ping 检测](#ping 检测)
@@ -42,6 +43,31 @@ tags:
 ...
 max_proxy: 10
 ```
+
+## 代理连接
+
+除了跳板机，mmh 也支持通过 socks5 或 http 代理连接服务器，效果等价于 OpenSSH 的
+`ProxyCommand nc -X 5 -x 127.0.0.1:17000 %h %p`:
+
+``` yaml
+basic:
+  # 对所有 server 生效
+  socks5: 127.0.0.1:17000
+servers:
+- name: gpu08
+  address: 10.10.4.18
+- name: gpu09
+  address: 10.10.4.19
+  # 单个 server 也可以覆盖 basic 中的配置
+  http_proxy: http://127.0.0.1:7890
+```
+
+- `socks5` 支持 `host:port` 以及需要认证的 `user:password@host:port`
+- `http_proxy` 支持 `host:port` 以及 `http://user:password@host:port`
+- 两者同时配置时 `socks5` 优先
+- 配置完成后 `mgo`、`mec`、`mcp`、`mtun` 等所有功能都会通过代理建立连接
+- 当 server 同时配置了 `proxy`(跳板机)时，跳板机使用自身的代理配置连接，目标服务器通过跳板机的
+  ssh 通道直达，此时目标 server 上的 `socks5`/`http_proxy` 不再生效
 
 ## 远程执行
 
