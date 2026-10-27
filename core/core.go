@@ -82,13 +82,24 @@ func (s *Server) ssh(secondLast bool, proxyCount int) (*ssh.Client, error) {
 
 		conn, err := proxyClient.Dial("tcp", fmt.Sprint(s.Address, ":", s.Port))
 		if err != nil {
+			// 代理连接没有交给调用方，这里必须自行关闭，否则每次失败都会泄漏一条到跳板机的 ssh 连接
+			_ = proxyClient.Close()
 			return nil, err
 		}
 		ncc, channel, request, err := ssh.NewClientConn(conn, fmt.Sprint(s.Address, ":", s.Port), sshConfig)
 		if err != nil {
+			_ = conn.Close()
+			_ = proxyClient.Close()
 			return nil, err
 		}
-		return ssh.NewClient(ncc, channel, request), nil
+
+		client := ssh.NewClient(ncc, channel, request)
+		// 目标 client 关闭后一并释放跳板机连接，避免代理链上的连接只增不减
+		go func() {
+			_ = client.Wait()
+			_ = proxyClient.Close()
+		}()
+		return client, nil
 
 	} else {
 		if secondLast {
