@@ -1,9 +1,11 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
+	"strings"
 
 	"github.com/mritd/mmh/common"
 )
@@ -88,13 +90,36 @@ func connCopy(rc, lc net.Conn) {
 
 	go func() {
 		_, err := io.Copy(rc, lc)
-		common.PrintErr(err)
+		reportCopyErr(err)
 		// local client closed its write side, propagate EOF to the remote target,
 		// otherwise the remote keep-alive connection (e.g. http proxy) never closes
 		closeWrite(rc)
 	}()
 
 	_, err := io.Copy(lc, rc)
-	common.PrintErr(err)
+	reportCopyErr(err)
 	closeWrite(lc)
+}
+
+// reportCopyErr reports copy errors, but not the closed connection error which
+// is caused by connCopy itself: when one direction finishes, the deferred Close
+// interrupts the other direction still blocked in io.Copy, that is the normal
+// tunnel teardown and must not be printed as a failure
+func reportCopyErr(err error) {
+	if err != nil && !isClosedConnError(err) {
+		common.PrintErr(err)
+	}
+}
+
+// isClosedConnError reports whether err was caused by using a connection which
+// is already closed
+func isClosedConnError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, net.ErrClosed) {
+		return true
+	}
+	// fallback for wrapped errors which do not unwrap to net.ErrClosed
+	return strings.Contains(err.Error(), "use of closed network connection")
 }
