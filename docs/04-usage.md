@@ -106,6 +106,23 @@ servers:
 - 当 server 同时配置了 `proxy`(跳板机)时，跳板机使用自身的代理配置连接，目标服务器通过跳板机的
   ssh 通道直达，此时目标 server 上的 `socks5`/`http_proxy` 不再生效
 
+连接时会在 stderr 输出实际使用的代理(代理地址中的认证信息会被隐藏)，例如:
+
+``` sh
+🧦 using socks5 proxy [127.0.0.1:17000] => gpu08(10.10.4.18:22)
+```
+
+如果当前网络不需要代理(例如已经处于目标服务器所在内网)，可以通过全局 `--no-proxy` 选项临时忽略
+`socks5`/`http_proxy` 配置，直接连接目标服务器:
+
+``` sh
+mgo --no-proxy gpu08
+# 等价写法
+mmh --no-proxy mgo gpu08
+```
+
+`--no-proxy` 只影响 `socks5`/`http_proxy`，配置的跳板机(`proxy`)链路仍然生效。
+
 ## 远程执行
 
 `mec` 命令可对包含某 tag 的一组服务器进行批量的命令执行:

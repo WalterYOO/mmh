@@ -590,3 +590,49 @@ func TestDialSSHPrefersSocks5(t *testing.T) {
 	assertEcho(t, conn)
 	assertProxyHit(t, socks, net.JoinHostPort(fakeProxyHost, strconv.Itoa(port)))
 }
+
+func TestMaskProxyAddr(t *testing.T) {
+	tests := map[string]string{
+		"127.0.0.1:1080":                    "127.0.0.1:1080",
+		"user:secret@127.0.0.1:1080":        "***@127.0.0.1:1080",
+		"http://user:secret@127.0.0.1:8080": "***@127.0.0.1:8080",
+	}
+	for addr, want := range tests {
+		if got := maskProxyAddr(addr); got != want {
+			t.Errorf("maskProxyAddr(%q) = %q, want %q", addr, got, want)
+		}
+	}
+}
+
+// TestDialSSHIgnoresProxy makes sure the --no-proxy flag bypasses the configured
+// proxy: the dead proxy is used by default, and the target is dialed directly
+// when IgnoreProxy is set
+func TestDialSSHIgnoresProxy(t *testing.T) {
+	echoAddr := startEchoServer(t)
+	host, port := parseAddr(t, echoAddr)
+
+	dead, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen failed: %v", err)
+	}
+	deadAddr := dead.Addr().String()
+	_ = dead.Close()
+
+	s := &Server{Address: host, Port: port, Socks5: deadAddr}
+
+	old := IgnoreProxy
+	defer func() { IgnoreProxy = old }()
+
+	IgnoreProxy = false
+	if conn, err := s.dialSSH(); err == nil {
+		_ = conn.Close()
+		t.Fatal("expected the dead socks5 proxy to be used and fail")
+	}
+
+	IgnoreProxy = true
+	conn, err := s.dialSSH()
+	if err != nil {
+		t.Fatalf("dial ssh with --no-proxy failed: %v", err)
+	}
+	assertEcho(t, conn)
+}

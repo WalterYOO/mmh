@@ -65,4 +65,5 @@ func GenCompletion(cmd *cobra.Command, shell string) {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&completionShell, "completion", "", "generate shell completion")
+	rootCmd.PersistentFlags().BoolVar(&core.IgnoreProxy, "no-proxy", false, "ignore socks5/http proxy settings and connect directly")
 }

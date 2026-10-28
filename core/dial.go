@@ -8,11 +8,16 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"golang.org/x/net/proxy"
 )
+
+// IgnoreProxy is set by the --no-proxy flag; when it is true the socks5 and
+// http_proxy settings are ignored and the target is dialed directly
+var IgnoreProxy bool
 
 // dialSSH dials the ssh server address, if socks5 or http_proxy is configured
 // on the server the connection is established through that proxy, otherwise
@@ -24,13 +29,23 @@ func (s *Server) dialSSH() (net.Conn, error) {
 	addr := net.JoinHostPort(s.Address, fmt.Sprint(s.Port))
 	switch {
 	// socks5 takes precedence when both are configured
-	case s.Socks5 != "":
+	case s.Socks5 != "" && !IgnoreProxy:
+		fmt.Fprintf(os.Stderr, "🧦 using socks5 proxy [%s] => %s(%s)\n", maskProxyAddr(s.Socks5), s.Name, addr)
 		return socks5Dial(s.Socks5, addr, sshConnectTimeout)
-	case s.HTTPProxy != "":
+	case s.HTTPProxy != "" && !IgnoreProxy:
+		fmt.Fprintf(os.Stderr, "🌐 using http proxy [%s] => %s(%s)\n", maskProxyAddr(s.HTTPProxy), s.Name, addr)
 		return httpProxyDial(s.HTTPProxy, addr, sshConnectTimeout)
 	default:
 		return net.DialTimeout("tcp", addr, sshConnectTimeout)
 	}
+}
+
+// maskProxyAddr hides the credentials of a proxy address before printing it
+func maskProxyAddr(addr string) string {
+	if i := strings.LastIndex(addr, "@"); i >= 0 {
+		return "***@" + addr[i+1:]
+	}
+	return addr
 }
 
 // socks5Dial dials target through the socks5 proxy; proxyAddr supports the
