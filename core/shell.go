@@ -17,8 +17,8 @@ const (
 	aliasBlockEnd   = "# <<< mmh aliases <<<"
 )
 
-// aliasNames is the list of mmh subcommands which will be injected into shell config files
-var aliasNames = []string{"mcp", "mcs", "mcx", "mec", "mgo", "mping", "mtun"}
+// AliasNames is the list of mmh subcommands which will be injected into shell config files
+var AliasNames = []string{"mcp", "mcs", "mcx", "mec", "mgo", "mping", "mtun"}
 
 // supportedShells is the shell list which can be detected or specified via --shell
 var supportedShells = []string{"zsh", "bash", "fish", "sh"}
@@ -59,7 +59,7 @@ func aliasTargets(shell, file string) ([]string, error) {
 		}
 	}
 	if len(shells) == 0 {
-		shells = []string{detectShell()}
+		shells = []string{DetectShell()}
 	}
 
 	var paths []string
@@ -78,9 +78,9 @@ func aliasTargets(shell, file string) ([]string, error) {
 	return paths, nil
 }
 
-// detectShell returns the shell name of the current environment, unknown shells
+// DetectShell returns the shell name of the current environment, unknown shells
 // fall back to sh (the POSIX profile)
-func detectShell() string {
+func DetectShell() string {
 	shell := strings.ToLower(filepath.Base(os.Getenv("SHELL")))
 	switch shell {
 	case "zsh", "bash", "fish":
@@ -149,7 +149,7 @@ func aliasBlock(bin string) string {
 	var b strings.Builder
 	b.WriteString(aliasBlockBegin + "\n")
 	b.WriteString("# managed by mmh, changes will be overwritten\n")
-	for _, name := range aliasNames {
+	for _, name := range AliasNames {
 		fmt.Fprintf(&b, "alias %s='%s %s'\n", name, bin, name)
 	}
 	b.WriteString(aliasBlockEnd + "\n")

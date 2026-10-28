@@ -9,7 +9,7 @@ import (
 func TestAliasBlock(t *testing.T) {
 	block := aliasBlock("mmh")
 
-	for _, name := range aliasNames {
+	for _, name := range AliasNames {
 		want := "alias " + name + "='mmh " + name + "'"
 		if !strings.Contains(block, want) {
 			t.Errorf("alias block missing %q:\n%s", want, block)
@@ -206,8 +206,8 @@ func TestDetectShell(t *testing.T) {
 		if err := os.Setenv("SHELL", shell); err != nil {
 			t.Fatal(err)
 		}
-		if got := detectShell(); got != want {
-			t.Errorf("detectShell() with SHELL=%q = %q, want %q", shell, got, want)
+		if got := DetectShell(); got != want {
+			t.Errorf("DetectShell() with SHELL=%q = %q, want %q", shell, got, want)
 		}
 	}
 }

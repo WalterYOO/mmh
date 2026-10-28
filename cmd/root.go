@@ -58,16 +58,9 @@ func Execute() {
 }
 
 func GenCompletion(cmd *cobra.Command, shell string) {
-	switch shell {
-	case "bash":
-		_ = cmd.GenBashCompletion(os.Stdout)
-	case "zsh":
-		_ = cmd.GenZshCompletion(os.Stdout)
-	case "fish":
-		_ = cmd.GenFishCompletion(os.Stdout, true)
-	case "powershell":
-		_ = cmd.GenPowerShellCompletionWithDesc(os.Stdout)
-	}
+	script, err := genCompletion(cmd, shell)
+	common.CheckAndExit(err)
+	fmt.Print(script)
 }
 
 func init() {
