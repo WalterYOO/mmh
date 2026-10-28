@@ -1,6 +1,7 @@
 # 功能详解
 
 - [命令列表](#命令列表)
+- [Shell 别名](#shell-别名)
 - [无限跳板](#无限跳板)
 - [代理连接](#代理连接)
 - [远程执行](#远程执行)
@@ -10,19 +11,55 @@
 
 ## 命令列表
 
-mmh 目前只支持 mac 和 linux 平台，对于 windows 用户在 WSL2 ubuntu 系统下已经测试通过。**mmh 在安装时
-仅会将原始二进制文件复制一份到安装目录(默认 `/usr/local/bin`)，然后会采用软链接的方式创建其他快捷命令。**
-目前 mmh 已包含命令列表以及软链接如下:
+mmh 目前只支持 mac 和 linux 平台，对于 windows 用户在 WSL2 ubuntu 系统下已经测试通过。**这些快捷
+命令既可以通过软链接的方式提供，也可以通过 `mmh alias` 以 shell 别名的方式注入到终端配置文件中。**
+目前 mmh 已包含的命令列表如下:
 
-- **`mmh cf -> mcf`: 用于切换 context，同时包含一个别名为 `mcx` 的命令**
-- **`mmh server -> mcs`: 列出当前 context 中的服务器**
-- **`mmh go -> mgo`: 登录某一台服务器(ssh)**
-- **`mmh exec -> mec`: 在远端服务器(或一组服务器)上执行命令**
-- **`mmh cp -> mcp`: 在本地与远端服务器(或一组服务器)之间复制文件**
-- **`mmh ping -> mping`: 针对远端服务器执行 ping 检测**
-- **`mmh tun -> mtun`: 在本地与远端服务器之间创建 tcp 隧道，支持反向创建**
+- **`mcx`: 用于切换 context(配置文件)**
+- **`mcs`: 列出当前 context 中的服务器**
+- **`mgo`: 登录某一台服务器(ssh)**
+- **`mec`: 在远端服务器(或一组服务器)上执行命令**
+- **`mcp`: 在本地与远端服务器(或一组服务器)之间复制文件**
+- **`mping`: 针对远端服务器执行 ping 检测**
+- **`mtun`: 在本地与远端服务器之间创建 tcp 隧道，支持反向创建**
 
-其他 install 等命令为辅助命令，暂不做详细说明。
+如果不想创建软链接，也可以通过 `mmh alias` 命令将这些命令以 shell 别名的方式注入到终端配置文件中，
+详见 [Shell 别名](#shell-别名)。
+
+## Shell 别名
+
+`mmh alias` 可以将 `mcp`、`mcs`、`mcx`、`mec`、`mgo`、`mping`、`mtun` 这些子命令以 shell
+别名的方式注入到终端配置文件中。默认会根据 `$SHELL` 自动识别当前 shell 并写入对应的配置文件:
+
+``` sh
+# 自动识别当前 shell 并注入
+mmh alias
+# 同时注入 zsh 和 bash 的配置文件
+mmh alias --shell zsh,bash
+# 写入指定的配置文件
+mmh alias --file ~/.zshrc
+# 删除已经注入的别名
+mmh alias --remove
+```
+
+支持的 shell 以及对应的配置文件如下:
+
+| shell | 配置文件 |
+| ----- | -------- |
+| zsh | `$ZDOTDIR/.zshrc` 或 `~/.zshrc` |
+| bash | macOS 优先 `~/.bash_profile`，其他平台优先 `~/.bashrc` |
+| fish | `$XDG_CONFIG_HOME/fish/config.fish` 或 `~/.config/fish/config.fish` |
+| sh | `~/.profile` |
+
+注入的内容被 `# >>> mmh aliases >>>` 和 `# <<< mmh aliases <<<` 两行标记包裹，
+**重复执行 `mmh alias` 只会替换标记块内的内容而不会重复追加**；如果希望自定义别名中使用的
+mmh 命令(比如使用绝对路径)，可以通过 `--bin` 指定:
+
+``` sh
+mmh alias --bin /usr/local/bin/mmh
+```
+
+命令执行完成后重新打开终端或执行 `source` 加载对应配置文件即可生效。
 
 ## 无限跳板
 
