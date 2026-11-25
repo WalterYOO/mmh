@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/mritd/mmh/common"
 	"github.com/mritd/mmh/core"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ var mtun = &cobra.Command{
 	Short: "Open a ssh tunnel",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 1 && tunLeftAddr != "" && tunRightAddr != "" {
-			core.Tunnel(args[0], tunLeftAddr, tunRightAddr, tunReverse)
+			common.CheckAndExit(core.Tunnel(args[0], tunLeftAddr, tunRightAddr, tunReverse))
 		} else {
 			_ = cmd.Help()
 		}

@@ -92,7 +92,8 @@ servers:
   socks5: 127.0.0.1:17000
   # 连接此服务器时使用的 http 代理(CONNECT 方式)，支持 http://user:password@host:port
   http_proxy: http://127.0.0.1:7890
-  # 每隔 n 时间发送心跳包保证 ssh 不会自动断开
+  # 每隔 n 时间发送心跳包保证 ssh 不会自动断开；同时用于交互式 shell 和 mtun
+  # 隧道保活，小于 10s 的值会被回落到 10s
   server_alive_interval: 20s
 
   ########### 以下部分为高级配置，具体请阅读后面的高级应用章节 ###########

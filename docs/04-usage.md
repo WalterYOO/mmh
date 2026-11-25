@@ -191,4 +191,14 @@ mtun -l 127.0.0.1:8080 -r baidu.com:80 prod11
 mtun -l baidu.com:80 -r 127.0.0.1:8080 --reverse prod11
 ```
 
+**隧道保活:**
+
+隧道建立后会按 `server_alive_interval`（默认 10s，小于 10s 的值按 10s 处理）周期性发送 SSH keepalive 探测。
+空闲链路被 NAT/防火墙静默回收时，隧道在默认 10s 配置下通常会在约 30s 内发现并退出（退出码非 0），
+建议使用 systemd/supervisor 托管并配置 `Restart=on-failure`。
+服务端主动断开连接按正常停止处理（退出码 0）。
+
+注意 keepalive 只能发现 SSH 传输层死亡：如果 SSH 连接正常但 `-r` 目标地址不可达，
+`mtun` 仍可能阻塞在建立连接上，这一场景不在当前保活范围内。
+
 [首页](.) | [上一页](03-config) | [下一页](05-advanced)
