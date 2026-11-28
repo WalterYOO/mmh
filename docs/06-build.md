@@ -2,7 +2,7 @@
 
 当前源码编译依赖环境如下:
 
-- Go 1.14.2+
+- Go 1.26.0+
 - Make
 - [gox](https://github.com/mitchellh/gox)
 
